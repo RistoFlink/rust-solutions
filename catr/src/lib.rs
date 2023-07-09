@@ -16,7 +16,7 @@ type MyResult<T> = Result<T, Box<dyn Error>>;
 pub fn run(config: Config) -> MyResult<()> {
     //dbg!(config);
     for filename in config.files {
-        let mut contents = fs::read_to_string(&filename);
+        //let mut contents = fs::read_to_string(&filename);
         match open(&filename) {
             Err(err) => eprintln!("Failed to open {}: {}", filename, err),
             Ok(reader) => {
@@ -24,11 +24,11 @@ pub fn run(config: Config) -> MyResult<()> {
                 for line_result in reader.lines() {
                     let line = line_result?;
                     if config.number_lines {
-                        println!("{} {}", index, line);
+                        println!("     {}\t{}", index, line);
                         index += 1;
                     } else if config.number_nonblank_lines {
                         if !line.trim().is_empty() {
-                            println!("{} {}", index, line);
+                            println!("     {}\t{}", index, line);
                             index += 1;
                         } else {
                             println!("{}", line);
