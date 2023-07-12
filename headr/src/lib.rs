@@ -11,7 +11,13 @@ pub struct Config {
 }
 
 pub fn run(config: Config) -> MyResult<()> {
-    println!("{:#?}", config);
+    //println!("{:#?}", config);
+    for filename in config.files {
+        match  {
+            Err(_) => eprintln!(),
+            Ok(_)
+        }
+    }
     Ok(())
 }
 
@@ -31,17 +37,18 @@ pub fn get_args() -> MyResult<Config> {
         .arg(
             Arg::with_name("lines")
                 .short("n")
-                //.long()
-                .help("How many lines do you want to be displayed.")
+                .long("lines")
+                .help("How many lines to be displayed.")
                 .default_value("10")
                 .required(false)
+                .conflicts_with("bytes")
                 .takes_value(true),
         )
         .arg(
             Arg::with_name("bytes")
-                .short("b")
-                //.long
-                .help("How many bytes do you want to be displayed.")
+                .short("c")
+                .long("bytes")
+                .help("How many bytes to be displayed.")
                 .required(false)
                 .takes_value(true),
         )
