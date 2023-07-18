@@ -1,6 +1,6 @@
-#![warn(clippy::all, clippy::pedantic)]
+//#![warn(clippy::all, clippy::pedantic)]
 mod editor;
-
+mod terminal;
 // fn to_ctrl_byte(c: char) -> u8 {
 //     //perform a bitwise AND-operation to check if control is pressed
 //     let byte = c as u8;
@@ -8,8 +8,9 @@ mod editor;
 // }
 
 use editor::Editor;
+pub use editor::Position;
+pub use terminal::Terminal;
 
 fn main() {
-    let editor = Editor::default();
-    editor.run();
+    Editor::default().run();
 }
