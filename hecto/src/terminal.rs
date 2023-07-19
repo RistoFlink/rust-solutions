@@ -26,6 +26,7 @@ impl Terminal {
             _stdout: stdout().into_raw_mode()?,
         })
     }
+    #[must_use]
     pub fn size(&self) -> &Size {
         &self.size
     }
@@ -62,7 +63,7 @@ impl Terminal {
     pub fn clear_current_line() {
         print!("{}", termion::clear::CurrentLine);
     }
-    pub fn set_bg_color(color: color::Rgb) {
+    pub fn set_bg_color(_color: color::Rgb) {
         print!("{}", termion::style::Invert); //color::Bg(color)); <- doesn't work on Mac
     }
     pub fn reset_bg_color() {

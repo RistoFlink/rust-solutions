@@ -58,11 +58,11 @@ impl Editor {
         let mut initial_status = String::from("HELP: Ctrl-Q = quit");
         let document = if args.len() > 1 {
             let file_name = &args[1];
-            let doc = Document::open(&file_name);
+            let doc = Document::open(file_name);
             if doc.is_ok() {
                 doc.unwrap()
             } else {
-                initial_status = format!("Error: Could not open file: {}", file_name);
+                initial_status = format!("Error: Could not open file: {file_name}");
                 Document::default()
             }
         } else {
@@ -177,7 +177,7 @@ impl Editor {
             }
             Key::PageDown => {
                 y = if y.saturating_add(terminal_height) < height {
-                    y + terminal_height as usize
+                    y + terminal_height
                 } else {
                     height
                 }
@@ -197,21 +197,21 @@ impl Editor {
         self.cursor_position = Position { x, y }
     }
     fn draw_welcome_message(&self) {
-        let mut welcome_message = format!("Hecto editor -- version {}", VERSION);
+        let mut welcome_message = format!("Hecto editor -- version {VERSION}");
         let width = self.terminal.size().width as usize;
         let len = welcome_message.len();
         let padding = width.saturating_sub(len) / 2;
         let spaces = " ".repeat(padding.saturating_sub(1));
-        welcome_message = format!("~{}{}", spaces, welcome_message);
+        welcome_message = format!("~{spaces}{welcome_message}");
         welcome_message.truncate(width);
-        println!("{}\r", welcome_message);
+        println!("{welcome_message}\r");
     }
     pub fn draw_row(&self, row: &Row) {
         let width = self.terminal.size().width as usize;
         let start = self.offset.x;
         let end = self.offset.x + width;
         let row = row.render(start, end);
-        println!("{}\r", row)
+        println!("{row}\r");
     }
 
     fn draw_rows(&self) {
@@ -235,7 +235,7 @@ impl Editor {
             file_name = name.clone();
             file_name.truncate(20);
         }
-        status = format!("{} - {} lines", file_name, self.document.len());
+        status = format!("{file_name} - {} lines", self.document.len());
         let line_indicator = format!(
             "{}/{}",
             self.cursor_position.y.saturating_add(1),
@@ -245,26 +245,26 @@ impl Editor {
         if width > len {
             status.push_str(&" ".repeat(width - len));
         }
-        status = format!("{}{}", status, line_indicator);
+        status = format!("{status}{line_indicator}");
         status.truncate(width);
         Terminal::set_bg_color(STATUS_BG_COLOR);
         Terminal::set_fg_color(STATUS_BG_COLOR);
-        println!("{}\r", status);
+        println!("{status}\r");
         Terminal::reset_fg_color();
         Terminal::reset_bg_color();
     }
     fn draw_message_bar(&self) {
         Terminal::clear_current_line();
         let message = &self.status_message;
-        if Instant::now() - message.time < Duration::new(5, 0) {
+        if message.time.elapsed() < Duration::new(5, 0) {
             let mut text = message.text.clone();
             text.truncate(self.terminal.size().width as usize);
-            print!("{}", text);
+            print!("{text}");
         }
     }
 }
 
 fn die(e: &std::io::Error) {
     Terminal::clear_screen();
-    panic!("{}", e);
+    panic!("{e}");
 }

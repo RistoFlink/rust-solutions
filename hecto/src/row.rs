@@ -18,6 +18,7 @@ impl From<&str> for Row {
 }
 
 impl Row {
+    #[must_use]
     pub fn render(&self, start: usize, end: usize) -> String {
         let end = cmp::min(end, self.string.len());
         let start = cmp::min(start, end);
@@ -28,16 +29,18 @@ impl Row {
             .take(end - start)
         {
             if grapheme == "\t" {
-                result.push_str(" ");
+                result.push(' ');
             } else {
                 result.push_str(grapheme);
             }
         }
         result
     }
+    #[must_use]
     pub fn len(&self) -> usize {
         self.len
     }
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.len == 0
     }
