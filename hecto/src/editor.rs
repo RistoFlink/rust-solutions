@@ -3,6 +3,7 @@ use crate::Row;
 use crate::Terminal;
 use core::panic;
 use std::env;
+//use std::fmt::format;
 use std::time::Duration;
 use std::time::Instant;
 use termion::color;
@@ -13,7 +14,13 @@ const STATUS_BG_COLOR: color::Rgb = color::Rgb(239, 239, 239);
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const QUIT_TIMES: u8 = 3;
 
-#[derive(Default)]
+#[derive(PartialEq, Clone, Copy)]
+pub enum SearchDirection {
+    Forward,
+    Backward,
+}
+
+#[derive(Default, Clone)]
 pub struct Position {
     pub x: usize,
     pub y: usize,
@@ -57,7 +64,8 @@ impl Editor {
     }
     pub fn default() -> Self {
         let args: Vec<String> = env::args().collect();
-        let mut initial_status = String::from("HELP: Ctrl-S = Save | Ctrl-Q = quit");
+        let mut initial_status =
+            String::from("HELP: Ctrl-F = find | Ctrl-S = Save | Ctrl-Q = quit");
         let document = if let Some(file_name) = args.get(1) {
             let doc = Document::open(file_name);
             if let Ok(doc) = doc {
@@ -104,7 +112,7 @@ impl Editor {
 
     fn save(&mut self) {
         if self.document.file_name.is_none() {
-            let new_name = self.prompt("Save as: ").unwrap_or(None);
+            let new_name = self.prompt("Save as: ", |_, _, _| {}).unwrap_or(None);
             if new_name.is_none() {
                 self.status_message = StatusMessage::from("Save aborted.".to_string());
                 return;
@@ -117,7 +125,40 @@ impl Editor {
             self.status_message = StatusMessage::from("Error writing file!".to_string());
         }
     }
-
+    fn search(&mut self) {
+        let old_position = self.cursor_position.clone();
+        let mut direction = SearchDirection::Forward;
+        let query = self
+            .prompt(
+                "Search (ESC to cancel, Arrows to navigate): ",
+                |editor, key, query| {
+                    let mut moved = false;
+                    match key {
+                        Key::Right | Key::Down => {
+                            editor.move_cursor(Key::Right);
+                            moved = true;
+                        }
+                        Key::Left | Key::Up => direction = SearchDirection::Backward,
+                        _ => direction = SearchDirection::Forward,
+                    }
+                    if let Some(position) =
+                        editor
+                            .document
+                            .find(&query, &editor.cursor_position, direction)
+                    {
+                        editor.cursor_position = position;
+                        editor.scroll();
+                    } else if moved {
+                        editor.move_cursor(Key::Left);
+                    }
+                },
+            )
+            .unwrap_or(None);
+        if query.is_none() {
+            self.cursor_position = old_position;
+            self.scroll();
+        }
+    }
     fn process_keypress(&mut self) -> Result<(), std::io::Error> {
         let pressed_key = Terminal::read_key()?;
         match pressed_key {
@@ -133,6 +174,7 @@ impl Editor {
                 self.should_quit = true
             }
             Key::Ctrl('s') => self.save(),
+            Key::Ctrl('f') => self.search(),
             Key::Char(c) => {
                 self.document.insert(&self.cursor_position, c);
                 self.move_cursor(Key::Right);
@@ -308,7 +350,7 @@ impl Editor {
         status = format!("{status}{line_indicator}");
         status.truncate(width);
         Terminal::set_bg_color(STATUS_BG_COLOR);
-        Terminal::set_fg_color(STATUS_BG_COLOR);
+        Terminal::set_fg_color(STATUS_FG_COLOR);
         println!("{status}\r");
         Terminal::reset_fg_color();
         Terminal::reset_bg_color();
@@ -322,12 +364,16 @@ impl Editor {
             print!("{text}");
         }
     }
-    fn prompt(&mut self, prompt: &str) -> Result<Option<String>, std::io::Error> {
+    fn prompt<C>(&mut self, prompt: &str, mut callback: C) -> Result<Option<String>, std::io::Error>
+    where
+        C: FnMut(&mut Self, Key, &String),
+    {
         let mut result = String::new();
         loop {
             self.status_message = StatusMessage::from(format!("{}{}", prompt, result));
             self.refresh_screen()?;
-            match Terminal::read_key()? {
+            let key = Terminal::read_key()?;
+            match key {
                 Key::Backspace => result.truncate(result.len().saturating_sub(1)),
                 Key::Char('\n') => break,
                 Key::Char(c) => {
@@ -341,6 +387,7 @@ impl Editor {
                 }
                 _ => (),
             }
+            callback(self, key, &result);
         }
         self.status_message = StatusMessage::from(String::new());
         if result.is_empty() {
