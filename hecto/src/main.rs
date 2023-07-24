@@ -9,6 +9,7 @@
 )]
 mod document;
 mod editor;
+mod highlighting;
 mod row;
 mod terminal;
 // fn to_ctrl_byte(c: char) -> u8 {
