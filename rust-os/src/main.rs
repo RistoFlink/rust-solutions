@@ -2,6 +2,9 @@
 #![no_std]
 //disable all Rust-level entry points
 #![no_main]
+#![feature(custom_test_frameworks)]
+#![test_runner(crate::test_runner)]
+#![reexport_test_harness_main = "test_main"]
 
 use core::panic::PanicInfo;
 
@@ -15,7 +18,15 @@ fn panic(info: &PanicInfo) -> ! {
     loop {} //indefinite loop
 }
 
-static HELLO: &[u8] = b"Hello, world!";
+#[cfg(test)]
+fn test_runner(tests: &[&dyn Fn()]) {
+    println!("Running {} tests", tests.len());
+    for test in tests {
+        test();
+    }
+}
+
+//static HELLO: &[u8] = b"Hello, world!";
 
 #[no_mangle] //don't mangle the name of this function
 pub extern "C" fn _start() -> ! {
@@ -39,8 +50,9 @@ pub extern "C" fn _start() -> ! {
     .unwrap(); */
 
     println!("Hello, world{}", "!");
-    panic!("Generic panic message");
+    //panic!("Generic panic message");
 
+    #[cfg(test)]
     loop {} //indefinite loop
 }
 
