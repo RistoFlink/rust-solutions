@@ -1,5 +1,7 @@
 use clap::{App, Arg};
-use std::error::Error;
+use std::{error::Error, io::{BufRead, BufReader, self}};
+use std::fs::File;
+
 
 type MyResult<T> = Result<T, Box<dyn Error>>;
 
@@ -11,15 +13,14 @@ pub struct Config {
 }
 
 pub fn run(config: Config) -> MyResult<()> {
-    println!("{:#?}", config);
-   // for filename in config.files {
-    //    match  {
-      //      Err(_) => eprintln!(),
-        //    Ok(_)
-       // }
-   // }
+    for filename in config.files {
+        match open(&filename) {
+            Err(err) => eprintln!("{}: {}", filename, err),
+            Ok(_) => println!("Opened {}", filename),
+        }
+    }
     Ok(())
-}
+   }
 
 pub fn get_args() -> MyResult<Config> {
     let matches = App::new("headr")
@@ -90,6 +91,14 @@ fn parse_positive_int(val: &str) -> MyResult<usize> {
         _ => Err(From::from(val)),
     }
 }
+
+fn open(filename: &str) -> MyResult<Box<dyn BufRead>> {
+    match filename {
+        "-" => Ok(Box::new(BufReader::new(io::stdin()))),
+        _ => Ok(Box::new(BufReader::new(File::open(filename)?)))
+    }
+}
+
 
 #[test]
 fn test_parse_positive_int() {
