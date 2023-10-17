@@ -11,13 +11,13 @@ pub struct Config {
 }
 
 pub fn run(config: Config) -> MyResult<()> {
-    //println!("{:#?}", config);
-    for filename in config.files {
-        match  {
-            Err(_) => eprintln!(),
-            Ok(_)
-        }
-    }
+    println!("{:#?}", config);
+   // for filename in config.files {
+    //    match  {
+      //      Err(_) => eprintln!(),
+        //    Ok(_)
+       // }
+   // }
     Ok(())
 }
 
@@ -27,40 +27,48 @@ pub fn get_args() -> MyResult<Config> {
         .author("Risto Flink <risto.flink@pm.me>")
         .about("Rust head")
         .arg(
-            Arg::with_name("files")
-                .value_name("FILES")
-                .help("Input files.")
-                .required(true)
-                .min_values(1)
-                .default_value("-"),
-        )
-        .arg(
             Arg::with_name("lines")
                 .short("n")
                 .long("lines")
                 .help("How many lines to be displayed.")
+                .value_name("LINES")
                 .default_value("10")
-                .required(false)
-                .conflicts_with("bytes")
-                .takes_value(true),
         )
         .arg(
             Arg::with_name("bytes")
                 .short("c")
                 .long("bytes")
+                .value_name("BYTES")
                 .help("How many bytes to be displayed.")
-                .required(false)
+                .conflicts_with("lines")
                 .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("files")
+                .value_name("FILE")
+                .help("Input file(s).")
+                .multiple(true)
+                .default_value("-"),
         )
         .get_matches();
 
+    let lines = matches
+        .value_of("lines")
+        .map(parse_positive_int)
+        .transpose()
+        .map_err(|e| format!("illegal line count -- {}", e))?;
+
+    let bytes = matches
+        .value_of("bytes")
+        .map(parse_positive_int)
+        .transpose()
+        .map_err(|e| format!("illegal byte count -- {}", e))?;
+
     Ok(Config {
         files: matches.values_of_lossy("files").unwrap(),
-        lines: matches.value_of("lines").unwrap().parse::<usize>().unwrap(),
-        bytes: matches
-            .value_of("bytes")
-            .map(|val| val.parse::<usize>().unwrap()),
-    })
+        lines: lines.unwrap(), 
+        bytes
+})
 }
 // really not an elegant solution to this problem..
 // fn parse_positive_int(val: &str) -> MyResult<usize> {
