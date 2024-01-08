@@ -16,14 +16,21 @@ pub fn run(config: Config) -> MyResult<()> {
     for filename in config.files {
         match open(&filename) {
             Err(err) => eprintln!("headr: {}: {}", filename, err),
-            Ok(file) => {
-                // use Iterator::take to select the desired number of lines from the filehandle
-                for line in file.lines().take(config.lines) {
-                    // print the line to the console
-                    println!("{}", line?);
+            Ok(mut file) => { // accept the filehandle as a mutable value
+                let mut line = String::new(); // create a new empty mutable string buffer to hold
+                                              // each line
+                for _ in 0..config.lines { // Iterate through a std::ops::Range from 0 to requested
+                                           // number of lines
+                    let bytes = file.read_line(&mut line)?; // use BufRead::read_line to read the
+                                                            // next line
+                    if bytes == 0 { // break when filehandle returns zero bytes
+                        break;
+                    }
+                    print!("{}", line); // print the line, including the original ending
+                    line.clear(); // use String::clear to empty the line buffer
                 }
             }
-        }
+        };
     }
     Ok(())
    }
