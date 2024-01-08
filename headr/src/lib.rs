@@ -15,8 +15,14 @@ pub struct Config {
 pub fn run(config: Config) -> MyResult<()> {
     for filename in config.files {
         match open(&filename) {
-            Err(err) => eprintln!("{}: {}", filename, err),
-            Ok(_) => println!("Opened {}", filename),
+            Err(err) => eprintln!("headr: {}: {}", filename, err),
+            Ok(file) => {
+                // use Iterator::take to select the desired number of lines from the filehandle
+                for line in file.lines().take(config.lines) {
+                    // print the line to the console
+                    println!("{}", line?);
+                }
+            }
         }
     }
     Ok(())
