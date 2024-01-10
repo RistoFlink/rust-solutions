@@ -1,7 +1,7 @@
 use clap::{App, Arg};
 use std::{error::Error, io::{BufRead, BufReader, self}};
 use std::fs::File;
-
+use std::io::Read;
 
 type MyResult<T> = Result<T, Box<dyn Error>>;
 
@@ -17,21 +17,40 @@ pub fn run(config: Config) -> MyResult<()> {
         match open(&filename) {
             Err(err) => eprintln!("headr: {}: {}", filename, err),
             Ok(mut file) => { // accept the filehandle as a mutable value
-                let mut line = String::new(); // create a new empty mutable string buffer to hold
-                                              // each line
-                for _ in 0..config.lines { // Iterate through a std::ops::Range from 0 to requested
-                                           // number of lines
-                    let bytes = file.read_line(&mut line)?; // use BufRead::read_line to read the
-                                                            // next line
-                    if bytes == 0 { // break when filehandle returns zero bytes
-                        break;
+                if let Some(num_bytes) = config.bytes { // use pattern matching to check if
+                                                        // config.bytes is Some number of bytes
+
+                    let mut handle = file.take(num_bytes as u64); // use take to read the requested
+                                                                  // number of bytes
+
+                    let mut buffer = vec![0; num_bytes]; // create a mutable buffer of length
+                                                         // num_bytes to hold the bytes read
+
+                    let bytes_read = handle.read(&mut buffer)?; // read the desired number of bytes
+                                                                // from the filehandle into the
+                                                                // buffer
+                    print!(
+                        "{}",
+                        String::from_utf8_lossy(&buffer[..bytes_read]) // convert the selected
+                                                                       // bytes into a string
+                      );
+                 } else {
+                        let mut line = String::new(); // create a new empty mutable string buffer to hold
+                                                      // each line
+                        for _ in 0..config.lines { // Iterate through a std::ops::Range from 0 to requested
+                                                   // number of lines
+                            let bytes = file.read_line(&mut line)?; // use BufRead::read_line to read the
+                                                                    // next line
+                            if bytes == 0 { // break when filehandle returns zero bytes
+                                break;
+                            }
+                            print!("{}", line); // print the line, including the original ending
+                            line.clear(); // use String::clear to empty the line buffer
+                        }
                     }
-                    print!("{}", line); // print the line, including the original ending
-                    line.clear(); // use String::clear to empty the line buffer
                 }
             }
         };
-    }
     Ok(())
    }
 
