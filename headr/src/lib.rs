@@ -13,34 +13,38 @@ pub struct Config {
 }
 
 pub fn run(config: Config) -> MyResult<()> {
-    for filename in config.files {
+     // use the Vec::len method to get the number of files
+    let num_files = config.files.len();
+
+    // use the Iterator::enumerate method to track the file number and filenames
+    for (file_num, filename) in config.files.iter().enumerate() { 
         match open(&filename) {
             Err(err) => eprintln!("headr: {}: {}", filename, err),
             Ok(mut file) => { // accept the filehandle as a mutable value
-                if let Some(num_bytes) = config.bytes { // use pattern matching to check if
-                                                        // config.bytes is Some number of bytes
+                if num_files > 1 { // only print headers if there are multiple files
+                    println!(
+                        "{}==> {} <==",
+                        // print a newline when file_num is greater than 0, which indicates the first file
+                        if file_num > 0 { "\n" } else { "" },
+                        filename
+                    );
+                }
+                // use pattern matching to check if config.bytes is Some number of bytes
+                if let Some(num_bytes) = config.bytes { 
+                    let mut handle = file.take(num_bytes as u64); // use take to read the requested number of bytes
 
-                    let mut handle = file.take(num_bytes as u64); // use take to read the requested
-                                                                  // number of bytes
+                    let mut buffer = vec![0; num_bytes]; // create a mutable buffer of length num_bytes to hold the bytes read
 
-                    let mut buffer = vec![0; num_bytes]; // create a mutable buffer of length
-                                                         // num_bytes to hold the bytes read
-
-                    let bytes_read = handle.read(&mut buffer)?; // read the desired number of bytes
-                                                                // from the filehandle into the
-                                                                // buffer
+                    let bytes_read = handle.read(&mut buffer)?; // read the desired number of bytes from the filehandle into the buffer
                     print!(
                         "{}",
-                        String::from_utf8_lossy(&buffer[..bytes_read]) // convert the selected
-                                                                       // bytes into a string
+                        String::from_utf8_lossy(&buffer[..bytes_read]) // convert the selected bytes into a string
                       );
                  } else {
-                        let mut line = String::new(); // create a new empty mutable string buffer to hold
-                                                      // each line
-                        for _ in 0..config.lines { // Iterate through a std::ops::Range from 0 to requested
-                                                   // number of lines
-                            let bytes = file.read_line(&mut line)?; // use BufRead::read_line to read the
-                                                                    // next line
+                        let mut line = String::new(); // create a new empty mutable string buffer to hold each line
+
+                        for _ in 0..config.lines { // Iterate through a std::ops::Range from 0 to requested number of lines
+                            let bytes = file.read_line(&mut line)?; // use BufRead::read_line to read the next line
                             if bytes == 0 { // break when filehandle returns zero bytes
                                 break;
                             }
