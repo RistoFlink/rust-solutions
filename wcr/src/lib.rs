@@ -96,7 +96,7 @@ pub fn run(config: Config) -> MyResult<()> {
         match open(filename) {
             // when a file fails to open, print the filename and error STDERR
             Err(err) => eprintln!("{}: {}", filename, err),
-            // when a fail is opened, print a message to STDOUT
+            // when a file is opened, print a message to STDOUT
             Ok(_) => println!("Opened {}", filename),
         }
     } 
