@@ -21,9 +21,8 @@ pub fn get_args() -> MyResult<Config> {
             Arg::with_name("files")
                 .value_name("FILES")
                 .help("Input files")
-                .required(true)
-                .min_values(1)
-                .default_value("-"),
+                .default_value("-")
+                .multiple(true),
             )
         .arg(
             Arg::with_name("lines")
@@ -31,8 +30,6 @@ pub fn get_args() -> MyResult<Config> {
                 .help("Show line count")
                 .short("l")
                 .long("--lines")
-                .required(false)
-                .default_value("true")
                 .takes_value(false),
             )
         .arg(
@@ -41,8 +38,6 @@ pub fn get_args() -> MyResult<Config> {
                 .help("Show word count")
                 .short("w")
                 .long("--words")
-                .required(false)
-                .default_value("true")
                 .takes_value(false),
             )
         .arg(
@@ -52,8 +47,6 @@ pub fn get_args() -> MyResult<Config> {
                 .short("c")
                 .long("--bytes")
                 .conflicts_with("chars")
-                .required(false)
-                .default_value("true")
                 .takes_value(false),
             )
         .arg(
@@ -62,18 +55,30 @@ pub fn get_args() -> MyResult<Config> {
                 .help("Show character count")
                 .short("m")
                 .long("--chars")
-                .required(false)
-                .default_value("false")
                 .takes_value(false),
             )
         .get_matches();
+    
+    // unpack all the flags
+    let mut lines = matches.is_present("lines");
+    let mut words = matches.is_present("words");
+    let mut bytes = matches.is_present("bytes");
+    let mut chars = matches.is_present("chars");
 
+    // if all the flags are false, set lines, words and bytes to true
+    if [lines, words, bytes, chars].iter().all(|v| v == &false) {
+        lines = true;
+        words = true;
+        bytes = true;
+    }
+
+    // use the struct field initialization shorthand to set the values
     Ok(Config {
         files: matches.values_of_lossy("files").unwrap(),
-        lines: matches.is_present("lines"),
-        words: matches.is_present("words"),
-        bytes: matches.is_present("bytes"),
-        chars: matches.is_present("chars"),
+        lines,
+        words,
+        bytes,
+        chars,
     })
 }
 
