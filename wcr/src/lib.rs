@@ -32,7 +32,8 @@ pub fn get_args() -> MyResult<Config> {
                 .short("l")
                 .long("--lines")
                 .required(false)
-                .default_value("true"),
+                .default_value("true")
+                .takes_value(false),
             )
         .arg(
             Arg::with_name("words")
@@ -41,7 +42,8 @@ pub fn get_args() -> MyResult<Config> {
                 .short("w")
                 .long("--words")
                 .required(false)
-                .default_value("true"),
+                .default_value("true")
+                .takes_value(false),
             )
         .arg(
             Arg::with_name("bytes")
@@ -49,8 +51,10 @@ pub fn get_args() -> MyResult<Config> {
                 .help("Show byte count")
                 .short("c")
                 .long("--bytes")
+                .conflicts_with("chars")
                 .required(false)
-                .default_value("true"),
+                .default_value("true")
+                .takes_value(false),
             )
         .arg(
             Arg::with_name("chars")
@@ -59,16 +63,17 @@ pub fn get_args() -> MyResult<Config> {
                 .short("m")
                 .long("--chars")
                 .required(false)
-                .default_value("false"),
+                .default_value("false")
+                .takes_value(false),
             )
         .get_matches();
 
     Ok(Config {
-        files: // TODO
-        lines:
-        words:
-        bytes:
-        chars:
+        files: matches.values_of_lossy("files").unwrap(),
+        lines: matches.is_present("lines"),
+        words: matches.is_present("words"),
+        bytes: matches.is_present("bytes"),
+        chars: matches.is_present("chars"),
     })
 }
 
