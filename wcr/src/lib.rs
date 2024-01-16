@@ -13,6 +13,14 @@ pub struct Config {
     chars: bool, // print the char count or not
 }
 
+#[derive(Debug, PartialEq)]
+pub struct FileInfo {
+    num_lines: usize,
+    num_words: usize,
+    num_bytes: usize,
+    num_chars: usize,
+}
+
 pub fn get_args() -> MyResult<Config> {
     let matches = App::new("wcr")
         .version("0.1.0")
@@ -100,4 +108,21 @@ pub fn open(filename: &str) -> MyResult<Box<dyn BufRead>> {
         "-" => Ok(Box::new(BufReader::new(io::stdin()))),
         _ => Ok(Box::new(BufReader::new(File::open(filename)?))),
     }
+}
+
+// accepts a mutable file value, and might return a FileInfo struct
+pub fn count(mut file: impl BufRead) -> MyResult<FileInfo> {
+    // initialize mutable variables to count the lines etc.
+   let mut num_lines = 0;
+   let mut num_words = 0;
+   let mut num_bytes = 0;
+   let mut num_chars = 0;
+
+   Ok(FileInfo {
+       // return a FileInfo with nothing but zeros (for now)
+       num_lines,
+       num_words,
+       num_bytes,
+       num_chars,
+   })
 }
