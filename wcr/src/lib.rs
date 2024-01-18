@@ -126,3 +126,31 @@ pub fn count(mut file: impl BufRead) -> MyResult<FileInfo> {
        num_chars,
    })
 }
+
+// TESTING
+// this module will only be compiled when testing
+#[cfg(test)]
+// define a new module tests to contain the test code
+mod tests {
+    // import the count function and FileInfo struct
+    use super::{count, FileInfo};
+    // Cursor is used to fake a filehandle for testing
+    use std::io::Cursor;
+
+    #[test]
+    fn test_count() {
+        let text = "I don't want the world. I just want your half..\r\n";
+        // run count with the Cursor
+        let info = count(Cursor::new(text));
+        // ensure the result is Ok
+        assert!(info.is_ok());
+        let expected = FileInfo {
+            num_lines: 1,
+            num_words: 10,
+            num_chars: 48,
+            num_bytes: 48,
+        };
+       // compare the result to the expected value 
+        assert_eq!(info.unwrap(), expected);
+    }
+}
