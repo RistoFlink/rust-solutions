@@ -56,12 +56,12 @@ pub fn run(config: Config) -> MyResult<()> {
     let mut previous = String::new(); // mutable variable to hold the previous line
     let mut count: u64 = 0; // mutable variable to hold the count
 
-    let print = |count: u64, text: &str| { // print closure accepts count and text values
+    let mut print = |count: u64, text: &str| -> MyResult<()> { // print closure accepts count and text values
         if count > 0 { // print only if count is greater than 0
             if config.count { // check if config.count value is true
-                print!("{:>4} {}", count, text); // print! macro to print the count and text to STDOUT..
+                write!(out_file, "{:>4} {}", count, text)?; // print! macro to print the count and text to STDOUT..
             } else {
-                print!("{}", text); // otherwise print the text to STDOUT
+                write!(out_file, "{}", text)?; // otherwise print the text to STDOUT
             }
         };
     };
