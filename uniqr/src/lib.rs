@@ -1,7 +1,7 @@
 use clap::{App, Arg};
 use std::error::Error;
 use std::fs::File;
-use std::io::{self, BufRead, BufReader};
+use std::io::{self, BufRead, BufReader, Write};
 
 type MyResult<T> = Result<T, Box<dyn Error>>;
 
@@ -47,15 +47,40 @@ pub fn get_args() -> MyResult<Config> {
 pub fn run(config: Config) -> MyResult<()> {
     let mut file = open(&config.in_file)
         .map_err(|e| format!("{}: {}", config.in_file, e))?; // either read STDIN if input file is a dash or open the given filename
+    let mut out_file: Box<dyn Write> = match config.out_file { // mutable out_file will be a boxed value that implements the std::io ::Write trait
+        Some(out_name) => Box::new(File::create(out_name)?), // if config.out_file is Some filename, use File::create to try to create the file..
+        _ => Box::new(io::stdout()), // .. otherwise use std::io::stdout()
+    };
+
     let mut line = String::new(); // new mutable String buffer to hold each line
+    let mut previous = String::new(); // mutable variable to hold the previous line
+    let mut count: u64 = 0; // mutable variable to hold the count
+
+    let print = |count: u64, text: &str| { // print closure accepts count and text values
+        if count > 0 { // print only if count is greater than 0
+            if config.count { // check if config.count value is true
+                print!("{:>4} {}", count, text); // print! macro to print the count and text to STDOUT..
+            } else {
+                print!("{}", text); // otherwise print the text to STDOUT
+            }
+        };
+    };
+
     loop { // infinite loop
         let bytes = file.read_line(&mut line)?; // read a line and preserve line endings
         if bytes == 0 {
             break; // break out of the loop if no bytes were read
         }
-        print!("{}", line); // print the line buffer
+
+        if line.trim_end() != previous.trim_end() { // compare the current line to the previous line (and remove trailing whitespace)
+            print(count, &previous);
+            previous = line.clone(); // set previous as a copy of the current line
+            count = 0; // reset the count
+        }
+        count += 1; // increment the count
         line.clear(); // clear the line buffer
     }
+    print(count, &previous);
     Ok(())
 }
 
