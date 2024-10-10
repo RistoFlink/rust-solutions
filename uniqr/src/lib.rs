@@ -64,6 +64,7 @@ pub fn run(config: Config) -> MyResult<()> {
                 write!(out_file, "{}", text)?; // otherwise print the text to STDOUT
             }
         };
+        Ok(())
     };
 
     loop { // infinite loop
