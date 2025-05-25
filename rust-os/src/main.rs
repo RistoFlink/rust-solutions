@@ -15,10 +15,22 @@ mod serial;
 
 //create a new panic function since the normal one can't be used
 //VSCode complains about this due to thinking the normal one still is in use..
+#[cfg(not(test))]
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
     println!("{}", info);
     loop {} //indefinite loop
+}
+
+
+// panic handler in test mode
+#[cfg(test)]
+#[panic_handler]
+fn panic(info: &PanicInfo) -> ! {
+    serial_println!("[failed]\n");
+    serial_println!("Error: {}\n", info);
+    exit_qemu(QemuExitCode::Failed);
+    loop {}
 }
 
 fn test_runner(tests: &[&dyn Fn()]) {
@@ -33,7 +45,7 @@ fn test_runner(tests: &[&dyn Fn()]) {
 #[test_case]
 fn trivial_assertion() {
     serial_print!("trivial assertion... ");
-    assert_eq!(1, 1);
+    assert_eq!(0, 1);
     serial_println!("[ok]");
 }
 
