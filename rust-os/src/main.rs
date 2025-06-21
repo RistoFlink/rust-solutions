@@ -2,66 +2,12 @@
 #![no_std]
 //disable all Rust-level entry points
 #![no_main]
-
 #![feature(custom_test_frameworks)]
-#![test_runner(crate::test_runner)]
-
+#![test_runner(rust_os::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 
 use core::panic::PanicInfo;
-
-mod vga_buffer;
-mod serial;
-
-//create a new panic function since the normal one can't be used
-//VSCode complains about this due to thinking the normal one still is in use..
-#[cfg(not(test))]
-#[panic_handler]
-fn panic(info: &PanicInfo) -> ! {
-    println!("{}", info);
-    loop {} //indefinite loop
-}
-
-
-// panic handler in test mode
-#[cfg(test)]
-#[panic_handler]
-fn panic(info: &PanicInfo) -> ! {
-    serial_println!("[failed]\n");
-    serial_println!("Error: {}\n", info);
-    exit_qemu(QemuExitCode::Failed);
-    loop {}
-}
-#[cfg(test)]
-pub fn test_runner(tests: &[&dyn Testable]) {
-    serial_println!("Running {} test(s)", tests.len());
-    for test in tests {
-        test.run();
-    }
-    // new
-    exit_qemu(QemuExitCode::Success);
-}
-
-#[test_case]
-fn trivial_assertion() {
-    assert_eq!(1, 1);
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[repr(u32)]
-pub enum QemuExitCode {
-    Success = 0x10,
-    Failed = 0x11,
-}
-
-pub fn exit_qemu(exit_code: QemuExitCode) {
-    use x86_64::instructions::port::Port;
-
-    unsafe {
-        let mut port = Port::new(0xf4);
-        port.write(exit_code as u32);
-    }
-}
+use rust_os::println;
 
 #[no_mangle] //don't mangle the name of this function
 pub extern "C" fn _start() -> ! {
@@ -93,19 +39,26 @@ pub extern "C" fn _start() -> ! {
     loop {} //indefinite loop
 }
 
-pub trait Testable {
-    fn run(&self) -> ();
+//create a new panic function since the normal one can't be used
+//VSCode complains about this due to thinking the normal one still is in use..
+#[cfg(not(test))]
+#[panic_handler]
+fn panic(info: &PanicInfo) -> ! {
+    println!("{}", info);
+    loop {} //indefinite loop
 }
 
-impl<T> Testable for T
-where
-    T: Fn(),
-{
-    fn run(&self) {
-        serial_print!("{}...\t", core::any::type_name::<T>());
-        self();
-        serial_println!("[ok]");
-    }
+
+// panic handler in test mode
+#[cfg(test)]
+#[panic_handler]
+fn panic(info: &PanicInfo) -> ! {
+    rust_os::test_panic_handler(info)
 }
+
+// #[test_case]
+// fn trivial_assertion() {
+//     assert_eq!(1, 1);
+// }
 
 // to run it in the virtual machine: qemu-system-x86_64 -drive format=raw,file=target/os/debug/bootimage-rust-os.bin
