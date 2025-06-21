@@ -32,7 +32,7 @@ fn panic(info: &PanicInfo) -> ! {
     exit_qemu(QemuExitCode::Failed);
     loop {}
 }
-
+#[cfg(test)]
 pub fn test_runner(tests: &[&dyn Testable]) {
     serial_println!("Running {} test(s)", tests.len());
     for test in tests {
