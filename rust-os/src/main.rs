@@ -36,10 +36,7 @@ pub extern "C" fn _start() -> ! {
     // IDE complains about this missing but it still runs..
     test_main();
     println!("All good!");
-    loop {
-        use rust_os::print;
-        print!("-");
-    } //indefinite loop
+    rust_os::hlt_loop();
 }
 
 //create a new panic function since the normal one can't be used
@@ -48,7 +45,7 @@ pub extern "C" fn _start() -> ! {
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
     println!("{}", info);
-    loop {} //indefinite loop
+    rust_os::hlt_loop();
 }
 
 
