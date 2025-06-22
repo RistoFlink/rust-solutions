@@ -25,12 +25,12 @@ pub extern "C" fn _start() -> ! {
     //     *(0xdeadbeef as *mut u8) = 42;
     // };
 
-    fn stack_overflow() {
-        stack_overflow(); // push the return address for each recursion
-    }
-
-    // trigger a stack overflow
-    stack_overflow();
+    // fn stack_overflow() {
+    //     stack_overflow(); // push the return address for each recursion
+    // }
+    //
+    // // trigger a stack overflow
+    // stack_overflow();
 
     #[cfg(test)]
     // IDE complains about this missing but it still runs..
