@@ -8,16 +8,20 @@
 
 use core::panic::PanicInfo;
 use rust_os::println;
+use bootloader::{BootInfo, entry_point};
 
 pub mod gdt;
 
-#[no_mangle] //don't mangle the name of this function
-pub extern "C" fn _start() -> ! {
+entry_point!(kernel_main);
+
+fn kernel_main(boot_info: &'static BootInfo) -> ! {
     println!("Hello, world{}", "!");
     rust_os::init();
 
-    let ptr = 0xdeadbeef as *mut u8;
-    unsafe { *ptr = 42 };
+    use x86_64::registers::control::Cr3;
+
+    let (level_4_page_table, _) = Cr3::read();
+    println!("Level 4 page table: {:?}", level_4_page_table.start_address());
 
     #[cfg(test)]
     // IDE complains about this missing but it still runs..
