@@ -14,23 +14,10 @@ pub mod gdt;
 #[no_mangle] //don't mangle the name of this function
 pub extern "C" fn _start() -> ! {
     println!("Hello, world{}", "!");
-    //panic!("Generic panic message");
     rust_os::init();
 
-    // invoke a breakpoint exception
-    // x86_64::instructions::interrupts::int3();
-
-    // trigger a page fault
-    // unsafe {
-    //     *(0xdeadbeef as *mut u8) = 42;
-    // };
-
-    // fn stack_overflow() {
-    //     stack_overflow(); // push the return address for each recursion
-    // }
-    //
-    // // trigger a stack overflow
-    // stack_overflow();
+    let ptr = 0xdeadbeef as *mut u8;
+    unsafe { *ptr = 42 };
 
     #[cfg(test)]
     // IDE complains about this missing but it still runs..
