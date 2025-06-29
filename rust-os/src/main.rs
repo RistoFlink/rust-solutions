@@ -9,20 +9,21 @@
 use core::panic::PanicInfo;
 use rust_os::println;
 use bootloader::{BootInfo, entry_point};
-use rust_os::memory::translate_addr;
 
 pub mod gdt;
 
 entry_point!(kernel_main);
 
 fn kernel_main(boot_info: &'static BootInfo) -> ! {
-    use rust_os::memory::active_level_4_table;
-    use x86_64::VirtAddr;
+    use rust_os::memory;
+    use x86_64::{structures::paging::Translate, VirtAddr};
 
     println!("Hello, world{}", "!");
     rust_os::init();
 
     let phys_mem_offset = VirtAddr::new(boot_info.physical_memory_offset);
+    // initialize a mapper
+    let mapper = unsafe { memory::init(phys_mem_offset) };
 
     let addresses = [
         // identity-mapped vga buffer page
@@ -37,14 +38,14 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
 
     for &address in &addresses {
         let virt = VirtAddr::new(address);
-        let phys = unsafe { translate_addr(virt, phys_mem_offset) };
+        let phys = mapper.translate_addr(virt);
         println!("{:?} -> {:?}", virt, phys);
     }
 
     #[cfg(test)]
     // IDE complains about this missing but it still runs..
     test_main();
-    println!("All good!");
+    println!("All good! No crash!");
     rust_os::hlt_loop();
 }
 
