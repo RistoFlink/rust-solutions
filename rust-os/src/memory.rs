@@ -36,6 +36,29 @@ unsafe fn active_level_4_table(physical_memory_offset: VirtAddr)
     unsafe { &mut *page_table_ptr }
 }
 
+use x86_64::{
+    PhysAddr,
+    structures::paging::{Page, PhysFrame, Mapper, Size4KiB, FrameAllocator}
+};
+
+// Create an example mapping for the given page to frame 0xb8000
+pub fn create_example_mapping(
+    page: Page,
+    mapper: &mut OffsetPageTable,
+    frame_allocator: &mut impl FrameAllocator<Size4KiB>,
+) {
+    use x86_64::structures::paging::PageTableFlags as Flags;
+
+    let frame = PhysFrame::containing_address(PhysAddr::new(0xb8000));
+    let flags = Flags::PRESENT | Flags::WRITABLE;
+
+    let map_to_result = unsafe {
+        // FIXME: not safe, only for testing
+        mapper.map_to(page, frame, flags, frame_allocator)
+    };
+    map_to_result.expect("map_to failed").flush();
+}
+
 // Translates the given virtual address to the mapped physical address, or
 // `None` if the address is not mapped.
 //
