@@ -109,6 +109,14 @@ impl BootInfoFrameAllocator {
     }
 }
 
+unsafe impl FrameAllocator<Size4KiB> for BootInfoFrameAllocator {
+    fn allocate_frame(&mut self) -> Option<PhysFrame> {
+        let frame = self.usable_frame().nth(self.next);
+        self.next += 1;
+        frame
+    }
+}
+
 // Translates the given virtual address to the mapped physical address, or
 // `None` if the address is not mapped.
 //
