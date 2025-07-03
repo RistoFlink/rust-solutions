@@ -1,5 +1,6 @@
 use alloc::alloc::{GlobalAlloc, Layout};
 use core::ptr::null_mut;
+use linked_list_allocator::LockedHeap;
 
 pub struct Dummy;
 pub const HEAP_START: usize = 0x_4444_4444_0000;
@@ -44,8 +45,12 @@ pub fn init_heat(
         };
     }
 
+    unsafe {
+        ALLOCATOR.lock().init(HEAP_START, HEAP_SIZE);
+    }
+
     Ok(())
 }
 
 #[global_allocator]
-static ALLOCATOR: Dummy = Dummy;
+static ALLOCATOR: LockedHeap = LockedHeap::empty();

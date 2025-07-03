@@ -12,7 +12,7 @@ use bootloader::{BootInfo, entry_point};
 
 extern crate alloc;
 
-use alloc::boxed::Box;
+use alloc::{boxed::Box, vec, vec::Vec, rc::Rc};
 
 pub mod gdt;
 
@@ -44,7 +44,23 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
     allocator::init_heat(&mut mapper, &mut frame_allocator)
         .expect("heap initialization failed");
 
-    let x = Box::new(41);
+    // allocate a number on the heap
+    let heap_value = Box::new(41);
+    println!("heap_value at {:p}", heap_value);
+
+    // create a dynamically sized vector
+    let mut vec = Vec::new();
+    for i in 0..500 {
+        vec.push(i);
+    }
+    println!("vec at {:p}", vec.as_slice());
+
+    // create a reference counted vector -> will be freed when count reaches 0
+    let reference_counted = Rc::new(vec![1, 2, 3]);
+    let cloned_reference = reference_counted.clone();
+    println!("current reference count is {}", Rc::strong_count(&cloned_reference));
+    core::mem::drop(reference_counted);
+    println!("reference count is {}", Rc::strong_count(&cloned_reference));
 
     #[cfg(test)]
     // IDE complains about this missing but it still runs..
