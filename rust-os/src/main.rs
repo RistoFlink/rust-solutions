@@ -19,8 +19,8 @@ pub mod gdt;
 entry_point!(kernel_main);
 
 fn kernel_main(boot_info: &'static BootInfo) -> ! {
-    use rust_os::memory::BootInfoFrameAllocator;
-    use rust_os::memory;
+    use rust_os::memory::{self, BootInfoFrameAllocator};
+    use rust_os::allocator;
     use x86_64::{structures::paging::Page, VirtAddr};
 
     println!("Hello, world{}", "!");
@@ -33,13 +33,16 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
         BootInfoFrameAllocator::init(&boot_info.memory_map)
     };
 
-    // map an unused page
-    let page = Page::containing_address(VirtAddr::new(0));
-    memory::create_example_mapping(page, &mut mapper, &mut frame_allocator);
+    // // map an unused page
+    // let page = Page::containing_address(VirtAddr::new(0));
+    // memory::create_example_mapping(page, &mut mapper, &mut frame_allocator);
+    //
+    // // write the string "New!" to the screen through the new mapping
+    // let page_ptr: *mut u64 = page.start_address().as_mut_ptr();
+    // unsafe { page_ptr.offset(400).write_volatile(0x_f021_f077_f065_f04e)};
 
-    // write the string "New!" to the screen through the new mapping
-    let page_ptr: *mut u64 = page.start_address().as_mut_ptr();
-    unsafe { page_ptr.offset(400).write_volatile(0x_f021_f077_f065_f04e)};
+    allocator::init_heat(&mut mapper, &mut frame_allocator)
+        .expect("heap initialization failed");
 
     let x = Box::new(41);
 
