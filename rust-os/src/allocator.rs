@@ -3,10 +3,13 @@ use core::ptr::null_mut;
 use linked_list_allocator::LockedHeap;
 
 pub struct Dummy;
+/// A wrapper around spin::Mutex to permit trait implementations
+pub struct Locked<A> {
+    inner: spin::Mutex<A>,
+}
 pub const HEAP_START: usize = 0x_4444_4444_0000;
 pub const HEAP_SIZE: usize = 100 * 1024; // 100 KiB
 pub mod bump;
-mod bump;
 
 unsafe impl GlobalAlloc for Dummy {
     unsafe fn alloc(&self, _layout: Layout) -> *mut u8 {
@@ -15,6 +18,18 @@ unsafe impl GlobalAlloc for Dummy {
 
     unsafe fn dealloc(&self, _ptr: *mut u8, _layout: Layout) {
         panic!("dealloc should be never called")
+    }
+}
+
+impl<A> Locked<A> {
+    pub const fn new(inner: A) -> Self {
+        Locked {
+            inner: spin::Mutex::new(inner),
+        }
+    }
+
+    pub fn lock(&self) -> spin::MutexGuard<A> {
+        self.inner.lock()
     }
 }
 

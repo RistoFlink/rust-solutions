@@ -29,7 +29,7 @@ impl BumpAllocator {
 
 use alloc::alloc::{GlobalAlloc, Layout};
 
-unsafe impl GlobalAlloc for BumpAllocator {
+unsafe impl GlobalAlloc for spin::Mutex<BumpAllocator> {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
         // TODO alignment and bounds check
         let alloc_start = self.next;
