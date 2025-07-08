@@ -29,7 +29,6 @@ impl BumpAllocator {
 
 use alloc::alloc::{GlobalAlloc, Layout};
 use core::ptr;
-use x86_64::align_up;
 use super::{align_up, Locked};
 
 unsafe impl GlobalAlloc for Locked<BumpAllocator> {
