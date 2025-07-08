@@ -69,5 +69,12 @@ pub fn init_heat(
     Ok(())
 }
 
+/// Align the given address `addr` upwards to alignment `align`.
+///
+/// Requires that `align` is a power of two.
+fn align_up(addr: usize, align: usize) -> usize {
+    (addr + align - 1) & !(align - 1)
+}
+
 #[global_allocator]
 static ALLOCATOR: LockedHeap = LockedHeap::empty();
