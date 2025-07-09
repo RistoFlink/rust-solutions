@@ -10,6 +10,8 @@ pub struct Locked<A> {
 pub const HEAP_START: usize = 0x_4444_4444_0000;
 pub const HEAP_SIZE: usize = 100 * 1024; // 100 KiB
 pub mod bump;
+pub mod linked_list;
+mod linked_list;
 
 unsafe impl GlobalAlloc for Dummy {
     unsafe fn alloc(&self, _layout: Layout) -> *mut u8 {
