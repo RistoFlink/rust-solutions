@@ -1,3 +1,5 @@
+pub mod simple_executor;
+
 use core::{future::Future, pin::Pin};
 use core::task::{Context, Poll};
 use alloc::boxed::Box;

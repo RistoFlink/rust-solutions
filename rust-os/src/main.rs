@@ -8,6 +8,7 @@
 
 use core::panic::PanicInfo;
 use rust_os::println;
+use rust_os::task::{Task, simple_executor::SimpleExecutor};
 use bootloader::{BootInfo, entry_point};
 
 extern crate alloc;
@@ -62,11 +63,24 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
     core::mem::drop(reference_counted);
     println!("reference count is {}", Rc::strong_count(&cloned_reference));
 
+    let mut executor = SimpleExecutor::new();
+    executor.spawn(Task::new(example_task()));
+    executor.run();
+
     #[cfg(test)]
     // IDE complains about this missing but it still runs..
     test_main();
     println!("All good! No crash!");
     rust_os::hlt_loop();
+}
+
+async fn async_number() -> u32 {
+    42
+}
+
+async fn example_task() {
+    let number = async_number().await;
+    println!("async number: {}", number);
 }
 
 //create a new panic function since the normal one can't be used
